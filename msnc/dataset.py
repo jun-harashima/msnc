@@ -5,7 +5,7 @@
 # y: a number for an example
 # ys: numbers for examples
 import math
-from seq2num.util import Util
+from msnc.util import Util
 
 
 class Dataset():
