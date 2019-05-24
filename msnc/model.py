@@ -1,3 +1,6 @@
+from typing import Dict
+from typing import Any
+
 import sys
 import random
 import pathlib
@@ -11,8 +14,27 @@ from msnc.util import Util
 
 class Model(nn.Module):
 
-    def __init__(self, encoder_params, linear_params, epoch_num=100,
-                 checkpoint_interval=10, batch_size=32, seed=1):
+    def __init__(
+        self,
+        encoder_params,
+        linear_params,
+        epoch_num=100,
+        checkpoint_interval=10,
+        batch_size=32,
+        seed=1
+    ):
+        """Neural Network based classifier
+
+        Arguments:
+            encoder_params {Dict[str, Any]} -- encoder parameters
+            linear_params {Dict[str, Any]} -- dense layer parameters
+
+        Keyword Arguments:
+            epoch_num {int} -- number of epochs (default: {100})
+            checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
+            batch_size {int} -- batch sizze (default: {32})
+            seed {int} -- random seed (default: {1})
+        """
         super(Model, self).__init__()
         random.seed(seed)
         torch.manual_seed(seed)
@@ -52,6 +74,7 @@ class Model(nn.Module):
         output_path.mkdir(parents=True, exist_ok=True)
         self._output_path = output_path
         self._log = open(output_path / 'log.txt', 'w')
+        self._best_accuracy = -float('inf')
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
@@ -63,6 +86,8 @@ class Model(nn.Module):
                 continue
             self.eval(development_set)
 
+        print(f'best_accuracy: {self._best_accuracy}')
+        print(f'best_accuracy: {self._best_accuracy}', file=self._log)
         self._log.close()
 
     def _train(self, batches, epoch):
@@ -76,10 +101,8 @@ class Model(nn.Module):
             loss.backward()
             self.optimizer.step()
             loss_sum += loss
-        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum),
-              file=sys.stderr)
-        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum),
-              file=self._log)
+        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=sys.stderr)  # NOQA
+        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=self._log)  # NOQA
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
@@ -124,5 +147,8 @@ class Model(nn.Module):
             print("y_hat: ", ys_hat[i])
             if ys_hat[i] == test_set.ys[i]:
                 ok += 1
-        print("{}".format(ok / len(ys_hat)))
-        print("{}".format(ok / len(ys_hat)), file=self._log)
+
+        accuracy = ok / len(ys_hat)
+        print(f'accuracy: {accuracy}')
+        print(f'accuracy: {accuracy}', file=self._log)
+        self._best_accuracy = max(self._best_accuracy, accuracy)
