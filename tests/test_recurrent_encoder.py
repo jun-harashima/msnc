@@ -2,16 +2,16 @@ import unittest
 from unittest.mock import patch
 import torch
 import torch.nn as nn
-from msnc.encoder import Encoder
+from msnc.encoder import RecurrentEncoder
 
 
-class TestEncoder(unittest.TestCase):
+class TestRecurrentEncoder(unittest.TestCase):
 
     def assertTorchEqual(self, x, y):
         self.assertTrue(torch.equal(x, y))
 
     def setUp(self):
-        self.model = Encoder(4, 2, 2, 1)
+        self.model = RecurrentEncoder(4, 2, 2, 1)
 
         embedding_weight = torch.tensor([[0.0, 0.0],  # for <PAD>
                                          [1.0, 2.0],  # for <UNK>
@@ -81,7 +81,7 @@ class TestEncoder(unittest.TestCase):
         # (layer number, batch size, hidden dimension)
         self.assertEqual(H.shape, (2, 3, 2))
 
-        model = Encoder(4, 2, 2, 1, use_lstm=True)
+        model = RecurrentEncoder(4, 2, 2, 1, use_lstm=True)
         H = model._rnn(self.X6)
         self.assertIsInstance(H, torch.Tensor)
         # (layer number, batch size, hidden dimension)
@@ -94,7 +94,7 @@ class TestEncoder(unittest.TestCase):
         self.assertTorchEqual(H2[0][2:], H[1][0])
 
     def test__view(self):
-        model = Encoder(4, 2, 2, 1, use_bidirectional=False)
+        model = RecurrentEncoder(4, 2, 2, 1, use_bidirectional=False)
         H = model._rnn(self.X6)
         H2 = model._view(H)
         self.assertTorchEqual(H2[0], H[0][0])
