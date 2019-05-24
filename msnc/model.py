@@ -1,5 +1,6 @@
 import sys
 import random
+import pathlib
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -37,7 +38,21 @@ class Model(nn.Module):
             linears.append(linear)
         return nn.ModuleList(linears)
 
-    def train(self, training_set, development_set=None):
+    def train(self, output_dir, training_set, development_set=None):
+        """run training procedure
+
+        Arguments:
+            output_dir {str} -- path to output dir
+            TODO training_set {} --
+
+        Keyword Arguments:
+            TODO development_set {} --  (default: {None})
+        """
+        output_path = pathlib.Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        self._output_path = output_path
+        self._log = open(output_path / 'log.txt', 'w')
+
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
             self._train(batches, epoch)
@@ -47,6 +62,8 @@ class Model(nn.Module):
             if development_set is None:
                 continue
             self.eval(development_set)
+
+        self._log.close()
 
     def _train(self, batches, epoch):
         random.shuffle(batches)
@@ -61,12 +78,15 @@ class Model(nn.Module):
             loss_sum += loss
         print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum),
               file=sys.stderr)
+        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum),
+              file=self._log)
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        torch.save(self.state_dict(), f'{epoch}.model')
+        model_path = self._output_path / f'{epoch}.model'
+        torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
         if len(test_set.Xs[0]) < self.batch_size:
@@ -105,3 +125,4 @@ class Model(nn.Module):
             if ys_hat[i] == test_set.ys[i]:
                 ok += 1
         print("{}".format(ok / len(ys_hat)))
+        print("{}".format(ok / len(ys_hat)), file=self._log)
