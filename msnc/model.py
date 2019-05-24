@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from msnc.encoder import Encoder
+from msnc.encoder import RecurrentEncoder
 from msnc.util import Util
 
 
@@ -49,7 +49,7 @@ class Model(nn.Module):
         self.criterion = nn.NLLLoss()
 
     def _init_encoders(self, encoder_params):
-        encoders = [Encoder(**params) for params in encoder_params]
+        encoders = [RecurrentEncoder(**params) for params in encoder_params]
         return nn.ModuleList(encoders)
 
     def _init_linears(self, linear_params):

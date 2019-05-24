@@ -4,11 +4,32 @@ import torch.nn.utils as U
 from msnc.util import Util
 
 
-class Encoder(nn.Module):
+class RecurrentEncoder(nn.Module):
 
-    def __init__(self, xdim, edim, hdim, lnum, use_bidirectional=True,
-                 use_lstm=True, dropout=0.2):
-        super(Encoder, self).__init__()
+    def __init__(
+        self,
+        xdim,
+        edim,
+        hdim,
+        lnum,
+        use_bidirectional=True,
+        use_lstm=True,
+        dropout=0.2
+    ):
+        """RNN encoder
+
+        Arguments:
+            xdim {int} -- input feature dimension
+            edim {int} -- embedding dimension
+            hdim {int} -- hidden vector dimension
+            lnum {int} -- number of stacked RNN layers
+
+        Keyword Arguments:
+            use_bidirectional {bool} -- if True, it uses bidirectional RNN (default: {True})  # NOQA
+            use_lstm {bool} -- if True, it uses LSTM (default: {True})
+            dropout {float} -- dropout ratio (default: {0.2})
+        """
+        super(RecurrentEncoder, self).__init__()
         self.util = Util()
         self.pad_index = self.util.PAD_INDEX
         self.xdim = xdim
