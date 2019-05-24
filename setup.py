@@ -11,11 +11,27 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+requirements = [
+    'natto-py==0.9.0',
+    'sentencepiece==0.1.82',
+    'torch==1.1.0',
+]
 
-setup_requirements = [ ]
+setup_requirements = [
+    'pip==18.1',
+    'bumpversion==0.5.3',
+    'wheel==0.32.1',
+    'watchdog==0.9.0',
+    'flake8==3.5.0',
+    'tox==3.5.2',
+    'coverage==4.5.1',
+    'Sphinx==1.8.1',
+    'twine==1.12.1',
+]
 
-test_requirements = [ ]
+test_requirements = [
+    'pytest==4.5.0'
+]
 
 setup(
     author="Jun Harashima",
