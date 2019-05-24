@@ -103,3 +103,46 @@ class RecurrentEncoder(nn.Module):
     def _unsort(self, H, indices):
         _, unsorted_indices = torch.tensor(indices).sort()
         return H.index_select(0, unsorted_indices)
+
+
+class AverageEncoder(nn.Module):
+
+    def __init__(
+        self,
+        xdim,
+        edim,
+        dropout=0.2
+    ):
+        """Averaging word vectors encoder
+
+        Arguments:
+            xdim {int} -- input feature dimension
+            edim {int} -- embedding dimension
+
+        Keyword Arguments:
+            dropout {float} -- dropout ratio (default: {0.2})
+        """
+        super(AverageEncoder, self).__init__()
+        self.util = Util()
+        self.pad_index = self.util.PAD_INDEX
+        self.xdim = xdim
+        self.edim = edim
+        self.dropout = dropout
+        self.use_cuda = self.util.use_cuda
+        self.embedding = self._init_embedding()
+
+    def _init_embedding(self):
+        embedding = nn.Embedding(self.xdim, self.edim, self.pad_index)
+        return embedding.cuda() if self.use_cuda else embedding
+
+    def forward(self, X):
+        H = []
+        for x in X:
+            h = self._embed(self.util.tensorize(x))
+            h = h.mean(dim=0)
+            H.append(h)
+
+        return torch.stack(H, dim=0)
+
+    def _embed(self, X):
+        return self.embedding(X)
