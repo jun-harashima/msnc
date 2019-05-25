@@ -14,7 +14,8 @@ class RecurrentEncoder(nn.Module):
         lnum,
         use_bidirectional=True,
         use_lstm=True,
-        dropout=0.2
+        dropout=0.2,
+        **kwargs,
     ):
         """RNN encoder
 
@@ -111,7 +112,8 @@ class AverageEncoder(nn.Module):
         self,
         xdim,
         edim,
-        dropout=0.2
+        dropout=0.2,
+        **kwargs
     ):
         """Averaging word vectors encoder
 
