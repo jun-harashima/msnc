@@ -4,13 +4,16 @@ import torch.nn.utils as U
 from msnc.util import Util
 
 
-class BaseEncoder(nn.Module):
+class GenericEncoder(nn.Module):
     def _init_embedding(self):
         embedding = nn.Embedding(self.xdim, self.edim, self.pad_index)
         return embedding.cuda() if self.use_cuda else embedding
 
+    def _embed(self, X):
+        return self.embedding(X)
 
-class RecurrentEncoder(BaseEncoder):
+
+class RecurrentEncoder(GenericEncoder):
 
     def __init__(
         self,
@@ -85,9 +88,6 @@ class RecurrentEncoder(BaseEncoder):
             X[i] = x + [self.pad_index] * (max(lengths) - len(X[i]))
         return X
 
-    def _embed(self, X):
-        return self.embedding(X)
-
     def _pack(self, X, lengths):
         return U.rnn.pack_padded_sequence(X, lengths, batch_first=True)
 
@@ -108,7 +108,7 @@ class RecurrentEncoder(BaseEncoder):
         return H.index_select(0, unsorted_indices)
 
 
-class AverageEncoder(BaseEncoder):
+class AverageEncoder(GenericEncoder):
 
     def __init__(
         self,
