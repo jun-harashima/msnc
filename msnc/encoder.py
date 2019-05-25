@@ -4,7 +4,13 @@ import torch.nn.utils as U
 from msnc.util import Util
 
 
-class RecurrentEncoder(nn.Module):
+class BaseEncoder(nn.Module):
+    def _init_embedding(self):
+        embedding = nn.Embedding(self.xdim, self.edim, self.pad_index)
+        return embedding.cuda() if self.use_cuda else embedding
+
+
+class RecurrentEncoder(BaseEncoder):
 
     def __init__(
         self,
@@ -15,7 +21,7 @@ class RecurrentEncoder(nn.Module):
         use_bidirectional=True,
         use_lstm=True,
         dropout=0.2,
-        **kwargs,
+        **kwargs
     ):
         """RNN encoder
 
@@ -43,10 +49,6 @@ class RecurrentEncoder(nn.Module):
         self.use_cuda = self.util.use_cuda
         self.embedding = self._init_embedding()
         self.rnn = self._init_rnn()
-
-    def _init_embedding(self):
-        embedding = nn.Embedding(self.xdim, self.edim, self.pad_index)
-        return embedding.cuda() if self.use_cuda else embedding
 
     def _init_rnn(self):
         return self._init_lstm() if self.use_lstm else self._init_gru()
@@ -106,7 +108,7 @@ class RecurrentEncoder(nn.Module):
         return H.index_select(0, unsorted_indices)
 
 
-class AverageEncoder(nn.Module):
+class AverageEncoder(BaseEncoder):
 
     def __init__(
         self,
@@ -132,10 +134,6 @@ class AverageEncoder(nn.Module):
         self.dropout = dropout
         self.use_cuda = self.util.use_cuda
         self.embedding = self._init_embedding()
-
-    def _init_embedding(self):
-        embedding = nn.Embedding(self.xdim, self.edim, self.pad_index)
-        return embedding.cuda() if self.use_cuda else embedding
 
     def forward(self, X):
         H = []
