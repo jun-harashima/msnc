@@ -93,8 +93,8 @@ class Model(nn.Module):
                 continue
             self.eval(development_set)
 
-        print(f'best_accuracy: {self._best_accuracy}')
-        print(f'best_accuracy: {self._best_accuracy}', file=self._log)
+        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=sys.stderr)  # NOQA
+        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=self._log)  # NOQA
         self._log.close()
 
     def _train(self, batches, epoch):
@@ -115,7 +115,7 @@ class Model(nn.Module):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        model_path = self._output_path / f'{epoch}.model'
+        model_path = self._output_path / '{}.model'.format(epoch)
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
@@ -156,6 +156,6 @@ class Model(nn.Module):
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        print(f'accuracy: {accuracy}')
-        print(f'accuracy: {accuracy}', file=self._log)
+        print('accuracy: {:3.2f}'.format(accuracy), file=sys.stderr)
+        print('accuracy: {:3.2f}'.format(accuracy), file=self._log)
         self._best_accuracy = max(self._best_accuracy, accuracy)
