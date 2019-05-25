@@ -8,7 +8,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from msnc.encoder import Encoder
+from msnc.encoder import AverageEncoder
+from msnc.encoder import RecurrentEncoder
 from msnc.util import Util
 
 
@@ -21,7 +22,7 @@ class Model(nn.Module):
         epoch_num=100,
         checkpoint_interval=10,
         batch_size=32,
-        seed=1
+        seed=1,
     ):
         """Neural Network based classifier
 
@@ -49,7 +50,13 @@ class Model(nn.Module):
         self.criterion = nn.NLLLoss()
 
     def _init_encoders(self, encoder_params):
-        encoders = [Encoder(**params) for params in encoder_params]
+        encoders = []
+        for params in encoder_params:
+            if params.get('encoder') == 'average':
+                encoders.append(AverageEncoder(**params))
+            else:
+                encoders.append(RecurrentEncoder(**params))
+
         return nn.ModuleList(encoders)
 
     def _init_linears(self, linear_params):
@@ -86,8 +93,8 @@ class Model(nn.Module):
                 continue
             self.eval(development_set)
 
-        print(f'best_accuracy: {self._best_accuracy}')
-        print(f'best_accuracy: {self._best_accuracy}', file=self._log)
+        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=sys.stderr)  # NOQA
+        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=self._log)  # NOQA
         self._log.close()
 
     def _train(self, batches, epoch):
@@ -108,7 +115,7 @@ class Model(nn.Module):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        model_path = self._output_path / f'{epoch}.model'
+        model_path = self._output_path / '{}.model'.format(epoch)
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
@@ -149,6 +156,6 @@ class Model(nn.Module):
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        print(f'accuracy: {accuracy}')
-        print(f'accuracy: {accuracy}', file=self._log)
+        print('accuracy: {:3.2f}'.format(accuracy), file=sys.stderr)
+        print('accuracy: {:3.2f}'.format(accuracy), file=self._log)
         self._best_accuracy = max(self._best_accuracy, accuracy)
