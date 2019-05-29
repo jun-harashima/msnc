@@ -74,19 +74,17 @@ class Model(nn.Module):
             linears.append(linear)
         return nn.ModuleList(linears)
 
-    def run_training(self, output_dir, training_set, development_set=None):
+    def run_training(self, output_dir_path, training_set, development_set=None):
         """run training procedure
 
         Arguments:
-            output_dir {str} -- path to output dir
+            output_dir_path {pathlib.Path} -- path to output dir
             TODO training_set {} --
 
         Keyword Arguments:
             TODO development_set {} --  (default: {None})
         """
-        output_path = pathlib.Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-        self._output_path = output_path
+        self._output_dir_path = output_dir_path
         self._best_accuracy = -float('inf')
 
         batches = training_set.split(self.batch_size)
@@ -123,7 +121,7 @@ class Model(nn.Module):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        model_path = self._output_path / '{}.model'.format(epoch)
+        model_path = self._output_dir_path / '{}.model'.format(epoch)
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
