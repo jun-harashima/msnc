@@ -5,12 +5,16 @@ import sys
 import random
 import pathlib
 import torch
+import logging
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from msnc.encoder import AverageEncoder
 from msnc.encoder import RecurrentEncoder
 from msnc.util import Util
+
+
+logger = logging.getLogger(__file__)
 
 
 class Model(nn.Module):
@@ -83,7 +87,6 @@ class Model(nn.Module):
         output_path = pathlib.Path(output_dir)
         output_path.mkdir(parents=True, exist_ok=True)
         self._output_path = output_path
-        self._log = open(output_path / 'log.txt', 'w')
         self._best_accuracy = -float('inf')
 
         batches = training_set.split(self.batch_size)
@@ -99,10 +102,7 @@ class Model(nn.Module):
             self.eval()
             self.run_evaluation(development_set)
 
-        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=sys.stderr)  # NOQA
-        if self._log is not None:
-            print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=self._log)  # NOQA
-        self._log.close()
+        logger.info('best_accuracy: {:3.2f}'.format(self._best_accuracy))
 
     def _train(self, batches, epoch):
         random.shuffle(batches)
@@ -164,9 +164,7 @@ class Model(nn.Module):
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        print('accuracy: {:3.2f}'.format(accuracy), file=sys.stderr)
-        if self._log is not None:
-            print('accuracy: {:3.2f}'.format(accuracy), file=self._log)
-
         if self._best_accuracy is not None:
             self._best_accuracy = max(self._best_accuracy, accuracy)
+
+        logging.debug('accuracy: {:3.2f}'.format(accuracy))
