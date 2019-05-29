@@ -49,6 +49,9 @@ class Model(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
         self.criterion = nn.NLLLoss()
 
+        self._best_accuracy = None
+        self._log = None
+
     def _init_encoders(self, encoder_params):
         encoders = []
         for params in encoder_params:
@@ -94,7 +97,8 @@ class Model(nn.Module):
             self.eval(development_set)
 
         print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=sys.stderr)  # NOQA
-        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=self._log)  # NOQA
+        if self._log is not None:
+            print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=self._log)  # NOQA
         self._log.close()
 
     def _train(self, batches, epoch):
@@ -109,7 +113,8 @@ class Model(nn.Module):
             self.optimizer.step()
             loss_sum += loss
         print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=sys.stderr)  # NOQA
-        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=self._log)  # NOQA
+        if self._log is not None:
+            print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=self._log)  # NOQA
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
@@ -157,5 +162,8 @@ class Model(nn.Module):
 
         accuracy = ok / len(ys_hat)
         print('accuracy: {:3.2f}'.format(accuracy), file=sys.stderr)
-        print('accuracy: {:3.2f}'.format(accuracy), file=self._log)
-        self._best_accuracy = max(self._best_accuracy, accuracy)
+        if self._log is not None:
+            print('accuracy: {:3.2f}'.format(accuracy), file=self._log)
+
+        if self._best_accuracy is not None:
+            self._best_accuracy = max(self._best_accuracy, accuracy)
