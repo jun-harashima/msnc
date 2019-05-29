@@ -70,7 +70,7 @@ class Model(nn.Module):
             linears.append(linear)
         return nn.ModuleList(linears)
 
-    def train(self, output_dir, training_set, development_set=None):
+    def training(self, output_dir, training_set, development_set=None):
         """run training procedure
 
         Arguments:
@@ -88,13 +88,16 @@ class Model(nn.Module):
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
+            self.train()
             self._train(batches, epoch)
             if not self._ischeckpoint(epoch):
                 continue
             self._save(epoch)
             if development_set is None:
                 continue
-            self.eval(development_set)
+
+            self.eval()
+            self.evaluate(development_set)
 
         print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=sys.stderr)  # NOQA
         if self._log is not None:
@@ -147,7 +150,7 @@ class Model(nn.Module):
             H = self.linears[i](H)
         return F.log_softmax(H, dim=1)
 
-    def eval(self, test_set):
+    def evaluate(self, test_set):
         ys_hat = [y_hat.argmax().item() for y_hat in self.test(test_set)]
         X_num = len(test_set.Xs)
         ok = 0
