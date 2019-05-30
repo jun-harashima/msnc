@@ -53,7 +53,7 @@ class Model(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
         self.criterion = nn.NLLLoss()
 
-        self._best_accuracy = None
+        self._best_dev_accuracy = None
         self._best_epoch = None
         self._log = None
 
@@ -75,7 +75,13 @@ class Model(nn.Module):
             linears.append(linear)
         return nn.ModuleList(linears)
 
-    def run_training(self, output_dir, training_set, development_set=None):
+    def run_training(
+        self,
+        output_dir,
+        training_set,
+        development_set=None,
+        test_set=None,
+    ):
         """run training procedure
 
         Arguments:
@@ -84,10 +90,14 @@ class Model(nn.Module):
 
         Keyword Arguments:
             TODO development_set {} --  dataset for validating (default: {None})
+            TODO test_set {} -- dataset for testing (default: {None})
         """
         self._output_dir_path = pathlib.Path(output_dir)
-        self._best_accuracy = -float('inf')
+        self._best_dev_accuracy = -float('inf')
         self._best_epoch = 0
+
+        # for testing
+        _test_accuracy = None if test_set is None else -float('inf')
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
@@ -96,14 +106,35 @@ class Model(nn.Module):
             if not self._ischeckpoint(epoch):
                 continue
             self._save(epoch)
-            if development_set is None:
-                continue
 
-            self.eval()
-            self.run_evaluation(development_set, epoch=epoch)
+            if development_set is not None:
+                dev_accuracy = self.run_evaluation(development_set)
+                log_line = 'dev accuracy: {:3.2f}'.format(dev_accuracy)
+                log_line += '   epoch: {}'.format(epoch)
+                logger.info(log_line)
 
-        log_line = 'best_accuracy: {:3.2f}'.format(self._best_accuracy)
-        log_line += '   best_epoch: {}'.format(self._best_epoch)
+                if not self.is_best(dev_accuracy):
+                    continue
+
+                # In case model perform better than previous model
+                log_line = '[new best] dev accuracy: {:3.2f}'.format(dev_accuracy)  # NOQA
+                log_line += '   epoch: {}'.format(epoch)
+
+                # Save epoch and performance informations
+                self._best_epoch = epoch
+                self._best_dev_accuracy = dev_accuracy
+
+                # If test_set is specified, it runs evaluation on test data
+                if test_set is not None:
+                    _test_accuracy = self.run_evaluation(test_set)
+                    log_line += '   test_accuracy: {:3.2f}'.format(_test_accuracy)  # NOQA
+
+                logging.info(log_line)
+
+        log_line = '[best] dev_accuracy: {:3.2f}'.format(self._best_dev_accuracy)  # NOQA
+        log_line += '   epoch: {}'.format(self._best_epoch)
+        if _test_accuracy is not None:
+            log_line += '   test_accuracy: {:3.2f}'.format(_test_accuracy)
         logger.info(log_line)
 
     def _train(self, batches, epoch):
@@ -151,10 +182,12 @@ class Model(nn.Module):
             H = self.linears[i](H)
         return F.log_softmax(H, dim=1)
 
-    def run_evaluation(self, test_set, epoch=None):
+    def run_evaluation(self, test_set):
+        self.eval()
+
         ys_hat = [y_hat.argmax().item() for y_hat in self.test(test_set)]
         X_num = len(test_set.Xs)
-        ok = 0
+        ok = .0
         for i in range(len(ys_hat)):
             for j in range(X_num):
                 logger.debug("X{}:    ".format(j) + str(test_set.Xs[j][i]))
@@ -165,11 +198,9 @@ class Model(nn.Module):
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        if self._best_accuracy is not None and epoch is not None:
-            if accuracy >= self._best_accuracy:
-                self._best_accuracy = accuracy
-                self._best_epoch = epoch
-                log_line = "New best epoch: {}, (accuracy: {:3.2f})".format(epoch, accuracy)  # NOQA
-                logger.debug(log_line)
+        return accuracy
 
-        logging.info('accuracy: {:3.2f}'.format(accuracy))
+    def is_best(self, dev_accuracy):
+        if self._best_dev_accuracy is None:
+            return False
+        return dev_accuracy >= self._best_dev_accuracy
