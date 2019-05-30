@@ -1,7 +1,3 @@
-from typing import Dict
-from typing import Any
-
-import sys
 import random
 import pathlib
 import torch
@@ -89,7 +85,7 @@ class Model(nn.Module):
             TODO training_set {} -- dataset for training
 
         Keyword Arguments:
-            TODO development_set {} --  dataset for validating (default: {None})
+            TODO development_set {} --  dataset for validating (default: {None})  # NOQA
             TODO test_set {} -- dataset for testing (default: {None})
         """
         self._output_dir_path = pathlib.Path(output_dir)
@@ -203,4 +199,4 @@ class Model(nn.Module):
     def is_best(self, dev_accuracy):
         if self._best_dev_accuracy is None:
             return False
-        return dev_accuracy >= self._best_dev_accuracy
+        return dev_accuracy > self._best_dev_accuracy
