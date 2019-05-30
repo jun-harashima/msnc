@@ -75,17 +75,17 @@ class Model(nn.Module):
             linears.append(linear)
         return nn.ModuleList(linears)
 
-    def run_training(self, output_dir_path, training_set, development_set=None):
+    def run_training(self, output_dir, training_set, development_set=None):
         """run training procedure
 
         Arguments:
-            output_dir_path {pathlib.Path} -- path to output dir
-            TODO training_set {} --
+            output_dir_path {str} -- path to output dir
+            TODO training_set {} -- dataset for training
 
         Keyword Arguments:
-            TODO development_set {} --  (default: {None})
+            TODO development_set {} --  dataset for validating (default: {None})
         """
-        self._output_dir_path = output_dir_path
+        self._output_dir_path = pathlib.Path(output_dir)
         self._best_accuracy = -float('inf')
         self._best_epoch = 0
 
