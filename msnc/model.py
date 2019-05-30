@@ -23,6 +23,7 @@ class Model(nn.Module):
         checkpoint_interval=10,
         batch_size=32,
         seed=1,
+        save_best_model=True,
     ):
         """Neural Network based classifier
 
@@ -52,6 +53,7 @@ class Model(nn.Module):
         self._best_dev_accuracy = None
         self._best_epoch = None
         self._log = None
+        self._save_best_model = save_best_model
 
     def _init_encoders(self, encoder_params):
         encoders = []
@@ -76,7 +78,6 @@ class Model(nn.Module):
         output_dir,
         training_set,
         development_set=None,
-        test_set=None,
     ):
         """run training procedure
 
@@ -86,14 +87,10 @@ class Model(nn.Module):
 
         Keyword Arguments:
             TODO development_set {} --  dataset for validating (default: {None})  # NOQA
-            TODO test_set {} -- dataset for testing (default: {None})
         """
         self._output_dir_path = pathlib.Path(output_dir)
         self._best_dev_accuracy = -float('inf')
         self._best_epoch = 0
-
-        # for testing
-        _test_accuracy = None if test_set is None else -float('inf')
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
@@ -120,17 +117,14 @@ class Model(nn.Module):
                 self._best_epoch = epoch
                 self._best_dev_accuracy = dev_accuracy
 
-                # If test_set is specified, it runs evaluation on test data
-                if test_set is not None:
-                    _test_accuracy = self.run_evaluation(test_set)
-                    log_line += '   test_accuracy: {:3.2f}'.format(_test_accuracy)  # NOQA
+                if self._save_best_model:
+                    self._save('best')
+                    logger.debug('Update best model')
 
                 logging.info(log_line)
 
         log_line = '[best] dev_accuracy: {:3.2f}'.format(self._best_dev_accuracy)  # NOQA
         log_line += '   epoch: {}'.format(self._best_epoch)
-        if _test_accuracy is not None:
-            log_line += '   test_accuracy: {:3.2f}'.format(_test_accuracy)
         logger.info(log_line)
 
     def _train(self, batches, epoch):
