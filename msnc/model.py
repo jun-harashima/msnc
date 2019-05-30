@@ -5,12 +5,16 @@ import sys
 import random
 import pathlib
 import torch
+import logging
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from msnc.encoder import AverageEncoder
 from msnc.encoder import RecurrentEncoder
 from msnc.util import Util
+
+
+logger = logging.getLogger(__file__)
 
 
 class Model(nn.Module):
@@ -50,6 +54,7 @@ class Model(nn.Module):
         self.criterion = nn.NLLLoss()
 
         self._best_accuracy = None
+        self._best_epoch = None
         self._log = None
 
     def _init_encoders(self, encoder_params):
@@ -74,17 +79,15 @@ class Model(nn.Module):
         """run training procedure
 
         Arguments:
-            output_dir {str} -- path to output dir
-            TODO training_set {} --
+            output_dir_path {str} -- path to output dir
+            TODO training_set {} -- dataset for training
 
         Keyword Arguments:
-            TODO development_set {} --  (default: {None})
+            TODO development_set {} --  dataset for validating (default: {None})
         """
-        output_path = pathlib.Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-        self._output_path = output_path
-        self._log = open(output_path / 'log.txt', 'w')
+        self._output_dir_path = pathlib.Path(output_dir)
         self._best_accuracy = -float('inf')
+        self._best_epoch = 0
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
@@ -97,12 +100,11 @@ class Model(nn.Module):
                 continue
 
             self.eval()
-            self.run_evaluation(development_set)
+            self.run_evaluation(development_set, epoch=epoch)
 
-        print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=sys.stderr)  # NOQA
-        if self._log is not None:
-            print('best_accuracy: {:3.2f}'.format(self._best_accuracy), file=self._log)  # NOQA
-        self._log.close()
+        log_line = 'best_accuracy: {:3.2f}'.format(self._best_accuracy)
+        log_line += '   best_epoch: {}'.format(self._best_epoch)
+        logger.info(log_line)
 
     def _train(self, batches, epoch):
         random.shuffle(batches)
@@ -115,15 +117,14 @@ class Model(nn.Module):
             loss.backward()
             self.optimizer.step()
             loss_sum += loss
-        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=sys.stderr)  # NOQA
-        if self._log is not None:
-            print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=self._log)  # NOQA
+
+        logger.info('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum))
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        model_path = self._output_path / '{}.model'.format(epoch)
+        model_path = self._output_dir_path / '{}.model'.format(epoch)
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
@@ -150,23 +151,25 @@ class Model(nn.Module):
             H = self.linears[i](H)
         return F.log_softmax(H, dim=1)
 
-    def run_evaluation(self, test_set):
+    def run_evaluation(self, test_set, epoch=None):
         ys_hat = [y_hat.argmax().item() for y_hat in self.test(test_set)]
         X_num = len(test_set.Xs)
         ok = 0
         for i in range(len(ys_hat)):
             for j in range(X_num):
-                print("X{}:    ".format(j), test_set.Xs[j][i])
-                print("raw_X{}:".format(j), test_set.raw_Xs[j][i])
-            print("y:     ", test_set.ys[i])
-            print("y_hat: ", ys_hat[i])
+                logger.debug("X{}:    ".format(j) + str(test_set.Xs[j][i]))
+                logger.debug("raw_X{}:".format(j) + str(test_set.raw_Xs[j][i]))
+            logger.debug("y:     " + str(test_set.ys[i]))
+            logger.debug("y_hat: " + str(ys_hat[i]))
             if ys_hat[i] == test_set.ys[i]:
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        print('accuracy: {:3.2f}'.format(accuracy), file=sys.stderr)
-        if self._log is not None:
-            print('accuracy: {:3.2f}'.format(accuracy), file=self._log)
+        if self._best_accuracy is not None and epoch is not None:
+            if accuracy >= self._best_accuracy:
+                self._best_accuracy = accuracy
+                self._best_epoch = epoch
+                log_line = "New best epoch: {}, (accuracy: {:3.2f})".format(epoch, accuracy)  # NOQA
+                logger.debug(log_line)
 
-        if self._best_accuracy is not None:
-            self._best_accuracy = max(self._best_accuracy, accuracy)
+        logging.info('accuracy: {:3.2f}'.format(accuracy))
