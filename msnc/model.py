@@ -100,7 +100,7 @@ class Model(nn.Module):
                 continue
 
             self.eval()
-            self.run_evaluation(epoch, development_set)
+            self.run_evaluation(development_set, epoch=epoch)
 
         log_line = 'best_accuracy: {:3.2f}'.format(self._best_accuracy)
         log_line += '   best_epoch: {}'.format(self._best_epoch)
@@ -151,7 +151,7 @@ class Model(nn.Module):
             H = self.linears[i](H)
         return F.log_softmax(H, dim=1)
 
-    def run_evaluation(self, epoch, test_set):
+    def run_evaluation(self, test_set, epoch=None):
         ys_hat = [y_hat.argmax().item() for y_hat in self.test(test_set)]
         X_num = len(test_set.Xs)
         ok = 0
@@ -165,7 +165,7 @@ class Model(nn.Module):
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        if self._best_accuracy is not None:
+        if self._best_accuracy is not None and epoch is not None:
             if accuracy >= self._best_accuracy:
                 self._best_accuracy = accuracy
                 self._best_epoch = epoch
