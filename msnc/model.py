@@ -54,6 +54,7 @@ class Model(nn.Module):
         self.criterion = nn.NLLLoss()
 
         self._best_accuracy = None
+        self._best_epoch = None
         self._log = None
 
     def _init_encoders(self, encoder_params):
@@ -86,6 +87,7 @@ class Model(nn.Module):
         """
         self._output_dir_path = output_dir_path
         self._best_accuracy = -float('inf')
+        self._best_epoch = 0
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
@@ -100,7 +102,9 @@ class Model(nn.Module):
             self.eval()
             self.run_evaluation(development_set)
 
-        logger.info('best_accuracy: {:3.2f}'.format(self._best_accuracy))
+        log_line = 'best_accuracy: {:3.2f}'.format(self._best_accuracy)
+        log_line += '   best_epoch: {}'.format(self._best_epoch)
+        logger.info(log_line)
 
     def _train(self, batches, epoch):
         random.shuffle(batches)
@@ -113,9 +117,8 @@ class Model(nn.Module):
             loss.backward()
             self.optimizer.step()
             loss_sum += loss
-        print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=sys.stderr)  # NOQA
-        if self._log is not None:
-            print('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum), file=self._log)  # NOQA
+
+        logger.info('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum))
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
@@ -154,10 +157,10 @@ class Model(nn.Module):
         ok = 0
         for i in range(len(ys_hat)):
             for j in range(X_num):
-                print("X{}:    ".format(j), test_set.Xs[j][i])
-                print("raw_X{}:".format(j), test_set.raw_Xs[j][i])
-            print("y:     ", test_set.ys[i])
-            print("y_hat: ", ys_hat[i])
+                logger.debug("X{}:    ".format(j) + str(test_set.Xs[j][i]))
+                logger.debug("raw_X{}:".format(j) + str(test_set.raw_Xs[j][i]))
+            logger.debug("y:     " + str(test_set.ys[i]))
+            logger.debug("y_hat: " + str(ys_hat[i]))
             if ys_hat[i] == test_set.ys[i]:
                 ok += 1
 
