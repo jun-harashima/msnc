@@ -79,7 +79,7 @@ class Model(nn.Module):
         training_set,
         development_set=None,
     ):
-        """run training procedure
+        """Run training procedure
 
         Arguments:
             output_dir_path {str} -- path to output dir
@@ -109,11 +109,11 @@ class Model(nn.Module):
                 if not self.is_best(dev_accuracy):
                     continue
 
-                # In case model perform better than previous model
+                # When the new model outperforms the previous ones
                 log_line = '[new best] dev accuracy: {:3.2f}'.format(dev_accuracy)  # NOQA
                 log_line += '   epoch: {}'.format(epoch)
 
-                # Save epoch and performance informations
+                # Save epoch and performance information
                 self._best_epoch = epoch
                 self._best_dev_accuracy = dev_accuracy
 
