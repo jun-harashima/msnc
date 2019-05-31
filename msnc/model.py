@@ -1,7 +1,3 @@
-from typing import Dict
-from typing import Any
-
-import sys
 import random
 import pathlib
 import torch
@@ -27,6 +23,7 @@ class Model(nn.Module):
         checkpoint_interval=10,
         batch_size=32,
         seed=1,
+        save_best_model=True,
     ):
         """Neural Network based classifier
 
@@ -53,9 +50,10 @@ class Model(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
         self.criterion = nn.NLLLoss()
 
-        self._best_accuracy = None
+        self._best_dev_accuracy = None
         self._best_epoch = None
         self._log = None
+        self._save_best_model = save_best_model
 
     def _init_encoders(self, encoder_params):
         encoders = []
@@ -75,18 +73,23 @@ class Model(nn.Module):
             linears.append(linear)
         return nn.ModuleList(linears)
 
-    def run_training(self, output_dir, training_set, development_set=None):
-        """run training procedure
+    def run_training(
+        self,
+        output_dir,
+        training_set,
+        development_set=None,
+    ):
+        """Run training procedure
 
         Arguments:
             output_dir_path {str} -- path to output dir
             TODO training_set {} -- dataset for training
 
         Keyword Arguments:
-            TODO development_set {} --  dataset for validating (default: {None})
+            TODO development_set {} --  dataset for validating (default: {None})  # NOQA
         """
         self._output_dir_path = pathlib.Path(output_dir)
-        self._best_accuracy = -float('inf')
+        self._best_dev_accuracy = -float('inf')
         self._best_epoch = 0
 
         batches = training_set.split(self.batch_size)
@@ -96,14 +99,32 @@ class Model(nn.Module):
             if not self._ischeckpoint(epoch):
                 continue
             self._save(epoch)
-            if development_set is None:
-                continue
 
-            self.eval()
-            self.run_evaluation(development_set, epoch=epoch)
+            if development_set is not None:
+                dev_accuracy = self.run_evaluation(development_set)
+                log_line = 'dev accuracy: {:3.2f}'.format(dev_accuracy)
+                log_line += '   epoch: {}'.format(epoch)
+                logger.info(log_line)
 
-        log_line = 'best_accuracy: {:3.2f}'.format(self._best_accuracy)
-        log_line += '   best_epoch: {}'.format(self._best_epoch)
+                if not self.is_best(dev_accuracy):
+                    continue
+
+                # When the new model outperforms the previous ones
+                log_line = '[new best] dev accuracy: {:3.2f}'.format(dev_accuracy)  # NOQA
+                log_line += '   epoch: {}'.format(epoch)
+
+                # Save epoch and performance information
+                self._best_epoch = epoch
+                self._best_dev_accuracy = dev_accuracy
+
+                if self._save_best_model:
+                    self._save('best')
+                    logger.debug('Update best model')
+
+                logging.info(log_line)
+
+        log_line = '[best] dev_accuracy: {:3.2f}'.format(self._best_dev_accuracy)  # NOQA
+        log_line += '   epoch: {}'.format(self._best_epoch)
         logger.info(log_line)
 
     def _train(self, batches, epoch):
@@ -151,10 +172,12 @@ class Model(nn.Module):
             H = self.linears[i](H)
         return F.log_softmax(H, dim=1)
 
-    def run_evaluation(self, test_set, epoch=None):
+    def run_evaluation(self, test_set):
+        self.eval()
+
         ys_hat = [y_hat.argmax().item() for y_hat in self.test(test_set)]
         X_num = len(test_set.Xs)
-        ok = 0
+        ok = .0
         for i in range(len(ys_hat)):
             for j in range(X_num):
                 logger.debug("X{}:    ".format(j) + str(test_set.Xs[j][i]))
@@ -165,11 +188,9 @@ class Model(nn.Module):
                 ok += 1
 
         accuracy = ok / len(ys_hat)
-        if self._best_accuracy is not None and epoch is not None:
-            if accuracy >= self._best_accuracy:
-                self._best_accuracy = accuracy
-                self._best_epoch = epoch
-                log_line = "New best epoch: {}, (accuracy: {:3.2f})".format(epoch, accuracy)  # NOQA
-                logger.debug(log_line)
+        return accuracy
 
-        logging.info('accuracy: {:3.2f}'.format(accuracy))
+    def is_best(self, dev_accuracy):
+        if self._best_dev_accuracy is None:
+            return False
+        return dev_accuracy > self._best_dev_accuracy
