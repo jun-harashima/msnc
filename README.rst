@@ -9,19 +9,19 @@ msnc
 .. image:: https://img.shields.io/travis/jun-harashima/msnc.svg
         :target: https://travis-ci.org/jun-harashima/msnc
 
-.. image:: https://readthedocs.org/projects/msnc/badge/?version=latest
-        :target: https://msnc.readthedocs.io/en/latest/?badge=latest
-        :alt: Documentation Status
+msnc is an acronym of multi-source neural classification.
 
+Quick Start
+===========
 
+Installation
+------------
 
+Run this command in your terminal:
 
-Multi-Source Neural Classification
+.. code-block:: bash
 
-
-* Free software: MIT license
-* Documentation: https://msnc.readthedocs.io.
-
+   $ pip install msnc
 
 Features
 --------
