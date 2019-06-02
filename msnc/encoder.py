@@ -143,6 +143,3 @@ class AverageEncoder(GenericEncoder):
             H.append(h)
 
         return torch.stack(H, dim=0)
-
-    def _embed(self, X):
-        return self.embedding(X)
