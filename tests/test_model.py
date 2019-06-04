@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 from msnc.model import Model
 from msnc.encoder import AverageEncoder
 from msnc.encoder import RecurrentEncoder
@@ -18,7 +17,9 @@ class TestModel(unittest.TestCase):
 
         self.linear_params_rnn = [
             {
-                'indim': 2*50, 'outdim': 40,
+                'indim': 2*50, 'outdim': 40
+            },
+            {
                 'indim': 40, 'outdim': 20
             },
         ]
@@ -32,7 +33,9 @@ class TestModel(unittest.TestCase):
 
         self.linear_params_avg = [
             {
-                'indim': 100, 'outdim': 40,
+                'indim': 100, 'outdim': 40
+            },
+            {
                 'indim': 40, 'outdim': 20
             },
         ]
