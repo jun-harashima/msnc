@@ -145,7 +145,7 @@ class Model(nn.Module):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        model_path = self._output_dir_path / '{}.model'.format(epoch)
+        model_path = self._output_dir_path / '{:04d}.model'.format(epoch)
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
