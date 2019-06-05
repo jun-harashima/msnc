@@ -31,6 +31,9 @@ class Dataset():
             self.Xs.append(self._degitize(X_sets[i], self.x_to_index[i]))
             self.raw_Xs.append(X_sets[i])
 
+        # indices
+        self.indices = [example['index'] for example in examples]
+
         if isregression:
             self.ys = [math.log10(example['y']) for example in examples]
         else:
