@@ -12,10 +12,10 @@ msnc
 msnc is an acronym of multi-source neural classification.
 
 Quick Start
-===========
+-----------
 
 Installation
-------------
+^^^^^^^^^^^^
 
 Run this command in your terminal:
 
