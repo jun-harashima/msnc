@@ -145,7 +145,14 @@ class Model(nn.Module):
         return epoch % self.checkpoint_interval == 0
 
     def _save(self, epoch):
-        model_path = self._output_dir_path / '{:04d}.model'.format(epoch)
+        if isinstance(epoch, int):
+            model_name = '{:04d}.model'.format(epoch)
+        elif isinstance(epoch, str):
+            model_name = epoch + '.model'
+        else:
+            raise Exception
+
+        model_path = self._output_dir_path / model_name
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
