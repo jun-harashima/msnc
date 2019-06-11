@@ -25,16 +25,16 @@ class Model(nn.Module):
         seed=1,
         save_best_model=True,
     ):
-        """Neural Network based classifier
+        """Neural network based classifier
 
         Arguments:
             encoder_params {Dict[str, Any]} -- encoder parameters
             linear_params {Dict[str, Any]} -- dense layer parameters
 
-        Keyword Arguments:
+        Keyword arguments:
             epoch_num {int} -- number of epochs (default: {100})
             checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
-            batch_size {int} -- batch sizze (default: {32})
+            batch_size {int} -- batch size (default: {32})
             seed {int} -- random seed (default: {1})
         """
         super(Model, self).__init__()
