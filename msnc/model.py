@@ -96,9 +96,11 @@ class Model(nn.Module):
         for epoch in range(1, self.epoch_num + 1):
             self.train()
             self._train(batches, epoch)
+
             if not self._ischeckpoint(epoch):
                 continue
-            self._save(epoch)
+            model_file_name = '{:04d}.model'.format(epoch)
+            self._save(model_file_name)
 
             if development_set is not None:
                 dev_accuracy = self.run_evaluation(development_set)
@@ -118,7 +120,7 @@ class Model(nn.Module):
                 self._best_dev_accuracy = dev_accuracy
 
                 if self._save_best_model:
-                    self._save('best')
+                    self._save('best.model')
                     logger.debug('Update best model')
 
                 logging.info(log_line)
@@ -144,15 +146,8 @@ class Model(nn.Module):
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
 
-    def _save(self, epoch):
-        if isinstance(epoch, int):
-            model_name = '{:04d}.model'.format(epoch)
-        elif isinstance(epoch, str):
-            model_name = epoch + '.model'
-        else:
-            raise Exception
-
-        model_path = self._output_dir_path / model_name
+    def _save(self, model_file_name: str):
+        model_path = self._output_dir_path / model_file_name
         torch.save(self.state_dict(), model_path.as_posix())
 
     def test(self, test_set):
