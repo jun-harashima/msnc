@@ -50,7 +50,6 @@ class Model(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
         self.criterion = nn.NLLLoss()
 
-        self._best_dev_accuracy = None
         self._best_epoch = None
         self._log = None
         self._save_best_model = save_best_model
@@ -193,6 +192,4 @@ class Model(nn.Module):
         return accuracy
 
     def is_best(self, dev_accuracy):
-        if self._best_dev_accuracy is None:
-            return False
         return dev_accuracy > self._best_dev_accuracy
