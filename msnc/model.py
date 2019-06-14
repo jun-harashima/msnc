@@ -50,7 +50,6 @@ class Model(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
         self.criterion = nn.NLLLoss()
 
-        self._best_epoch = None
         self._log = None
         self._save_best_model = save_best_model
 
