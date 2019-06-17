@@ -23,7 +23,6 @@ class Model(nn.Module):
         checkpoint_interval=10,
         batch_size=32,
         seed=1,
-        save_best_model=True,
     ):
         """Neural network based classifier
 
@@ -50,8 +49,6 @@ class Model(nn.Module):
         self.optimizer = optim.SGD(self.parameters(), lr=0.01)
         self.criterion = nn.NLLLoss()
 
-        self._save_best_model = save_best_model
-
     def _init_encoders(self, encoder_params):
         encoders = []
         for params in encoder_params:
@@ -75,6 +72,7 @@ class Model(nn.Module):
         output_dir,
         training_set,
         development_set=None,
+        save_best_model=True,
     ):
         """Run training procedure
 
@@ -84,6 +82,7 @@ class Model(nn.Module):
 
         Keyword Arguments:
             TODO development_set {} --  dataset for validating (default: {None})  # NOQA
+            save_best_model {} -- save the best model if True (default: {True})
         """
         self._output_dir_path = pathlib.Path(output_dir)
         self._best_dev_accuracy = -float('inf')
@@ -116,7 +115,7 @@ class Model(nn.Module):
                 self._best_epoch = epoch
                 self._best_dev_accuracy = dev_accuracy
 
-                if self._save_best_model:
+                if save_best_model:
                     self._save('best.model')
                     logger.debug('Update best model')
 
