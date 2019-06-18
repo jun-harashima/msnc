@@ -56,7 +56,6 @@ class Model(nn.Module):
                 encoders.append(AverageEncoder(**params))
             else:
                 encoders.append(RecurrentEncoder(**params))
-
         return nn.ModuleList(encoders)
 
     def _init_linears(self, linear_params):
