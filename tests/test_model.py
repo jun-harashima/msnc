@@ -47,3 +47,12 @@ class TestModel(unittest.TestCase):
     def test___init__with_avg(self):
         model = Model(self.encoder_params_avg, self.linear_params_avg)
         self.assertIsInstance(model.encoders[0], AverageEncoder)
+
+    def test__set_log_line(self):
+        model = Model(self.encoder_params_rnn, self.linear_params_rnn)
+
+        log_line = model._set_log_line(0.100, 10)
+        self.assertEqual(log_line, ' dev_accuracy: 0.10   epoch: 10')
+
+        log_line = model._set_log_line(0.100, 10, 'note')
+        self.assertEqual(log_line, 'note dev_accuracy: 0.10   epoch: 10')
