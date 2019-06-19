@@ -99,16 +99,14 @@ class Model(nn.Module):
 
             if development_set is not None:
                 dev_accuracy = self.run_evaluation(development_set)
-                log_line = 'dev accuracy: {:3.2f}'.format(dev_accuracy)
-                log_line += '   epoch: {}'.format(epoch)
+                log_line = self._set_log_line(dev_accuracy, epoch)
                 logger.info(log_line)
 
                 if not self.is_best(dev_accuracy):
                     continue
 
                 # When the new model outperforms the previous ones
-                log_line = '[new best] dev accuracy: {:3.2f}'.format(dev_accuracy)  # NOQA
-                log_line += '   epoch: {}'.format(epoch)
+                log_line = self._set_log_line(dev_accuracy, epoch, '[new best]')  # NOQA
 
                 # Save epoch and performance information
                 self._best_epoch = epoch
@@ -120,8 +118,7 @@ class Model(nn.Module):
 
                 logging.info(log_line)
 
-        log_line = '[best] dev_accuracy: {:3.2f}'.format(self._best_dev_accuracy)  # NOQA
-        log_line += '   epoch: {}'.format(self._best_epoch)
+        log_line = self._set_log_line(self._best_dev_accuracy, self._best_epoch, '[best]')  # NOQA
         logger.info(log_line)
 
     def _train(self, batches, epoch):
@@ -144,6 +141,9 @@ class Model(nn.Module):
     def _save(self, model_file_name: str):
         model_path = self._output_dir_path / model_file_name
         torch.save(self.state_dict(), model_path.as_posix())
+
+    def _set_log_line(self, accuracy, epoch, note=''):
+        return '{} dev_accuracy: {:3.2f}   epoch: {}'.format(note, accuracy, epoch)  # NOQA
 
     def test(self, test_set):
         if len(test_set.Xs[0]) < self.batch_size:
