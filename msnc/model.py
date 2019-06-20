@@ -158,7 +158,7 @@ class Model(nn.Module):
     def _test(self, batches):
         results = []
         for *Xs, _ in batches:
-            ys_hat = self(Xs)
+            ys_hat = self(Xs).detach().numpy()
             results.extend(ys_hat)
         return results
 
