@@ -24,7 +24,7 @@ class Model(nn.Module):
         batch_size=32,
         seed=1,
     ):
-        """Neural network based classifier
+        """Neural network-based classifier
 
         Arguments:
             encoder_params {Dict[str, Any]} -- encoder parameters
