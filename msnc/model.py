@@ -100,19 +100,8 @@ class Model(nn.Module):
             if development_set is not None:
                 dev_accuracy = self.run_evaluation(development_set)
                 self._write_log(dev_accuracy, epoch)
-
-                if not self.is_best(dev_accuracy):
-                    continue
-
-                # When the new model outperforms the previous ones
-                self._write_log(dev_accuracy, epoch, '[new best]')
-
-                # Save epoch and performance information
-                self._best_epoch = epoch
-                self._best_dev_accuracy = dev_accuracy
-
-                if save_best_model:
-                    self._save('best.model')
+                if self.is_best(dev_accuracy):
+                    self._update_best(dev_accuracy, epoch, save_best_model)
 
         self._write_log(self._best_dev_accuracy, self._best_epoch, '[best]')
 
@@ -132,6 +121,13 @@ class Model(nn.Module):
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
+
+    def _update_best(self, dev_accuracy, epoch, save_best_model):
+        self._best_dev_accuracy = dev_accuracy
+        self._best_epoch = epoch
+        if save_best_model:
+            self._save('best.model')
+        self._write_log(dev_accuracy, epoch, '[new best]')
 
     def _save(self, model_file_name: str):
         model_path = self._output_dir_path / model_file_name
