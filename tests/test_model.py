@@ -48,12 +48,6 @@ class TestModel(unittest.TestCase):
         model = Model(self.encoder_params_avg, self.linear_params_avg)
         self.assertIsInstance(model.encoders[0], AverageEncoder)
 
-    def test__update_best(self):
-        model = Model(self.encoder_params_rnn, self.linear_params_rnn)
-        model._update_best(0.100, 10, False)
-        self.assertEqual(model._best_dev_accuracy, 0.100)
-        self.assertEqual(model._best_epoch, 10)
-
     def test__set_log_line(self):
         model = Model(self.encoder_params_rnn, self.linear_params_rnn)
 

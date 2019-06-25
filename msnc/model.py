@@ -84,8 +84,7 @@ class Model(nn.Module):
             save_best_model {} -- save the best model if True (default: {True})
         """
         self._output_dir_path = pathlib.Path(output_dir)
-        self._best_dev_accuracy = -float('inf')
-        self._best_epoch = 0
+        best_dev_accuracy, best_epoch = -float('inf'), 0
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, self.epoch_num + 1):
@@ -100,10 +99,13 @@ class Model(nn.Module):
             if development_set is not None:
                 dev_accuracy = self.run_evaluation(development_set)
                 self._write_log(dev_accuracy, epoch)
-                if self.is_best(dev_accuracy):
-                    self._update_best(dev_accuracy, epoch, save_best_model)
+                if dev_accuracy > best_dev_accuracy:
+                    best_dev_accuracy, best_epoch = dev_accuracy, epoch
+                    self._write_log(dev_accuracy, epoch, '[new best]')
+                    if save_best_model:
+                        self._save('best.model')
 
-        self._write_log(self._best_dev_accuracy, self._best_epoch, '[best]')
+        self._write_log(best_dev_accuracy, best_epoch, '[best]')
 
     def _train(self, batches, epoch):
         random.shuffle(batches)
@@ -121,13 +123,6 @@ class Model(nn.Module):
 
     def _ischeckpoint(self, epoch):
         return epoch % self.checkpoint_interval == 0
-
-    def _update_best(self, dev_accuracy, epoch, save_best_model):
-        self._best_dev_accuracy = dev_accuracy
-        self._best_epoch = epoch
-        if save_best_model:
-            self._save('best.model')
-        self._write_log(dev_accuracy, epoch, '[new best]')
 
     def _save(self, model_file_name: str):
         model_path = self._output_dir_path / model_file_name
@@ -181,6 +176,3 @@ class Model(nn.Module):
 
         accuracy = ok / len(ys_hat)
         return accuracy
-
-    def is_best(self, dev_accuracy):
-        return dev_accuracy > self._best_dev_accuracy
