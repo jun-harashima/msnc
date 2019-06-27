@@ -19,7 +19,6 @@ class Model(nn.Module):
         self,
         encoder_params,
         linear_params,
-        epoch_num=100,
         checkpoint_interval=10,
         batch_size=32,
         seed=1,
@@ -31,7 +30,6 @@ class Model(nn.Module):
             linear_params {Dict[str, Any]} -- dense layer parameters
 
         Keyword arguments:
-            epoch_num {int} -- number of epochs (default: {100})
             checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
             batch_size {int} -- batch size (default: {32})
             seed {int} -- random seed (default: {1})
@@ -40,7 +38,6 @@ class Model(nn.Module):
         random.seed(seed)
         torch.manual_seed(seed)
         self.util = Util()
-        self.epoch_num = epoch_num
         self.checkpoint_interval = checkpoint_interval
         self.batch_size = batch_size
         self.use_cuda = self.util.use_cuda
@@ -70,6 +67,7 @@ class Model(nn.Module):
         self,
         output_dir,
         training_set,
+        epoch_num=100,
         development_set=None,
         save_best_model=True,
     ):
@@ -80,6 +78,7 @@ class Model(nn.Module):
             TODO training_set {} -- dataset for training
 
         Keyword Arguments:
+            epoch_num {int} -- number of epochs (default: {100})
             TODO development_set {} --  dataset for validating (default: {None})  # NOQA
             save_best_model {} -- save the best model if True (default: {True})
         """
@@ -88,7 +87,7 @@ class Model(nn.Module):
         self._best_epoch = 0
 
         batches = training_set.split(self.batch_size)
-        for epoch in range(1, self.epoch_num + 1):
+        for epoch in range(1, epoch_num + 1):
             self.train()
             self._train(batches, epoch)
 
