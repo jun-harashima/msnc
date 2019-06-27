@@ -19,7 +19,6 @@ class Model(nn.Module):
         self,
         encoder_params,
         linear_params,
-        checkpoint_interval=10,
         batch_size=32,
         seed=1,
     ):
@@ -30,7 +29,6 @@ class Model(nn.Module):
             linear_params {Dict[str, Any]} -- dense layer parameters
 
         Keyword arguments:
-            checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
             batch_size {int} -- batch size (default: {32})
             seed {int} -- random seed (default: {1})
         """
@@ -38,7 +36,6 @@ class Model(nn.Module):
         random.seed(seed)
         torch.manual_seed(seed)
         self.util = Util()
-        self.checkpoint_interval = checkpoint_interval
         self.batch_size = batch_size
         self.use_cuda = self.util.use_cuda
         self.encoders = self._init_encoders(encoder_params)
@@ -68,6 +65,7 @@ class Model(nn.Module):
         output_dir,
         training_set,
         epoch_num=100,
+        checkpoint_interval=10,
         development_set=None,
         save_best_model=True,
     ):
@@ -79,6 +77,7 @@ class Model(nn.Module):
 
         Keyword Arguments:
             epoch_num {int} -- number of epochs (default: {100})
+            checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
             TODO development_set {} --  dataset for validating (default: {None})  # NOQA
             save_best_model {} -- save the best model if True (default: {True})
         """
@@ -91,7 +90,7 @@ class Model(nn.Module):
             self.train()
             self._train(batches, epoch)
 
-            if not self._ischeckpoint(epoch):
+            if not self._ischeckpoint(epoch, checkpoint_interval):
                 continue
             model_file_name = '{:04d}.model'.format(epoch)
             self._save(model_file_name)
@@ -118,8 +117,8 @@ class Model(nn.Module):
 
         logger.info('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum))
 
-    def _ischeckpoint(self, epoch):
-        return epoch % self.checkpoint_interval == 0
+    def _ischeckpoint(self, epoch, checkpoint_interval):
+        return epoch % checkpoint_interval == 0
 
     def _update_best(self, dev_accuracy, epoch, save_best_model):
         self._best_dev_accuracy = dev_accuracy
