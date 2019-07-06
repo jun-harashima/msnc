@@ -11,7 +11,7 @@ class TestAverageEncoder(unittest.TestCase):
         self.assertTrue(torch.equal(x, y))
 
     def setUp(self):
-        self.model = AverageEncoder(4, 2, 1)
+        self.model = AverageEncoder(4, 2)
 
         embedding_weight = torch.tensor([[0.0, 0.0],  # for <PAD>
                                          [1.0, 2.0],  # for <UNK>
