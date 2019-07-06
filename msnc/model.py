@@ -73,8 +73,8 @@ class Model(nn.Module):
 
         Arguments:
             output_dir_path {str} -- path to output dir
-            TODO training_set {} -- dataset for training
-            TODO development_set {} --  dataset for development
+            training_set {Dataset} -- dataset for training
+            development_set {Dataset} --  dataset for development
 
         Keyword Arguments:
             epoch_num {int} -- number of epochs (default: {100})
