@@ -114,7 +114,6 @@ class AverageEncoder(GenericEncoder):
         self,
         xdim,
         edim,
-        dropout=0.2,
         **kwargs
     ):
         """Averaging word vectors encoder
@@ -122,16 +121,12 @@ class AverageEncoder(GenericEncoder):
         Arguments:
             xdim {int} -- input feature dimension
             edim {int} -- embedding dimension
-
-        Keyword Arguments:
-            dropout {float} -- dropout ratio (default: {0.2})
         """
         super(AverageEncoder, self).__init__()
         self.util = Util()
         self.pad_index = self.util.PAD_INDEX
         self.xdim = xdim
         self.edim = edim
-        self.dropout = dropout
         self.use_cuda = self.util.use_cuda
         self.embedding = self._init_embedding()
 
