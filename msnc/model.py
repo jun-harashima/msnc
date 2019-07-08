@@ -64,21 +64,21 @@ class Model(nn.Module):
         self,
         output_dir,
         training_set,
+        development_set,
         epoch_num=100,
         checkpoint_interval=10,
-        development_set=None,
         save_best_model=True,
     ):
         """Run training procedure
 
         Arguments:
             output_dir_path {str} -- path to output dir
-            TODO training_set {} -- dataset for training
+            training_set {Dataset} -- dataset for training
+            development_set {Dataset} --  dataset for development
 
         Keyword Arguments:
             epoch_num {int} -- number of epochs (default: {100})
             checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
-            TODO development_set {} --  dataset for validating (default: {None})  # NOQA
             save_best_model {} -- save the best model if True (default: {True})
         """
         self._output_dir_path = pathlib.Path(output_dir)
@@ -94,14 +94,13 @@ class Model(nn.Module):
             model_file_name = '{:04d}.model'.format(epoch)
             self._save(model_file_name)
 
-            if development_set is not None:
-                dev_accuracy = self.run_evaluation(development_set)
-                self._write_log(dev_accuracy, epoch)
-                if dev_accuracy > best_dev_accuracy:
-                    best_dev_accuracy, best_epoch = dev_accuracy, epoch
-                    self._write_log(dev_accuracy, epoch, '[new best]')
-                    if save_best_model:
-                        self._save('best.model')
+            dev_accuracy = self.run_evaluation(development_set)
+            self._write_log(dev_accuracy, epoch)
+            if dev_accuracy > best_dev_accuracy:
+                best_dev_accuracy, best_epoch = dev_accuracy, epoch
+                self._write_log(dev_accuracy, epoch, '[new best]')
+                if save_best_model:
+                    self._save('best.model')
 
         self._write_log(best_dev_accuracy, best_epoch, '[best]')
 
