@@ -67,7 +67,6 @@ class Model(nn.Module):
         development_set,
         epoch_num=100,
         checkpoint_interval=10,
-        save_best_model=True,
     ):
         """Run training procedure
 
@@ -79,32 +78,29 @@ class Model(nn.Module):
         Keyword Arguments:
             epoch_num {int} -- number of epochs (default: {100})
             checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
-            save_best_model {} -- save the best model if True (default: {True})
         """
         self._output_dir_path = pathlib.Path(output_dir)
         best_dev_accuracy, best_epoch = -float('inf'), 0
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, epoch_num + 1):
+            self.epoch = epoch
             self.train()
-            self._train(batches, epoch)
+            self._train(batches)
 
-            if not self._ischeckpoint(epoch, checkpoint_interval):
+            if not self._ischeckpoint(checkpoint_interval):
                 continue
-            model_file_name = '{:04d}.model'.format(epoch)
-            self._save(model_file_name)
 
             dev_accuracy = self.run_evaluation(development_set)
-            self._write_log(dev_accuracy, epoch)
+            self._write_log(dev_accuracy, self.epoch)
             if dev_accuracy > best_dev_accuracy:
-                best_dev_accuracy, best_epoch = dev_accuracy, epoch
-                self._write_log(dev_accuracy, epoch, '[new best]')
-                if save_best_model:
-                    self._save('best.model')
+                best_dev_accuracy, best_epoch = dev_accuracy, self.epoch
+                self._save('best.model')
+                self._write_log(dev_accuracy, self.epoch, '[new best]')
 
         self._write_log(best_dev_accuracy, best_epoch, '[best]')
 
-    def _train(self, batches, epoch):
+    def _train(self, batches):
         random.shuffle(batches)
         loss_sum = 0
         for *Xs, ys in batches:
@@ -116,10 +112,10 @@ class Model(nn.Module):
             self.optimizer.step()
             loss_sum += loss
 
-        logger.info('epoch {:>3}\tloss {:6.2f}'.format(epoch, loss_sum))
+        logger.info('epoch {:>3}\tloss {:6.2f}'.format(self.epoch, loss_sum))
 
-    def _ischeckpoint(self, epoch, checkpoint_interval):
-        return epoch % checkpoint_interval == 0
+    def _ischeckpoint(self, checkpoint_interval):
+        return self.epoch % checkpoint_interval == 0
 
     def _save(self, model_file_name: str):
         model_path = self._output_dir_path / model_file_name
