@@ -80,25 +80,19 @@ class Model(nn.Module):
             checkpoint_interval {int} -- it creates checkpoints at {checkpoint_interval} (default: {10})  # NOQA
         """
         self._output_dir_path = pathlib.Path(output_dir)
-        best_dev_accuracy, best_epoch = -float('inf'), 0
+        best_accuracy, best_epoch = -float('inf'), 0
 
         batches = training_set.split(self.batch_size)
         for epoch in range(1, epoch_num + 1):
             self.epoch = epoch
             self.train()
             self._train(batches)
-
             if not self._ischeckpoint(checkpoint_interval):
                 continue
+            best_accuracy, best_epoch = \
+                self._develop(development_set, best_accuracy, best_epoch)
 
-            dev_accuracy = self.run_evaluation(development_set)
-            self._write_log(dev_accuracy, self.epoch)
-            if dev_accuracy > best_dev_accuracy:
-                best_dev_accuracy, best_epoch = dev_accuracy, self.epoch
-                self._save('best.model')
-                self._write_log(dev_accuracy, self.epoch, '[new best]')
-
-        self._write_log(best_dev_accuracy, best_epoch, '[best]')
+        self._write_log(best_accuracy, best_epoch, '[best]')
 
     def _train(self, batches):
         random.shuffle(batches)
@@ -116,6 +110,15 @@ class Model(nn.Module):
 
     def _ischeckpoint(self, checkpoint_interval):
         return self.epoch % checkpoint_interval == 0
+
+    def _develop(self, development_set, best_accuracy, best_epoch):
+        accuracy = self.run_evaluation(development_set)
+        self._write_log(accuracy, self.epoch)
+        if accuracy > best_accuracy:
+            best_accuracy, best_epoch = accuracy, self.epoch
+            self._write_log(accuracy, self.epoch, '[new best]')
+            self._save('best.model')
+        return best_accuracy, best_epoch
 
     def _save(self, model_file_name: str):
         model_path = self._output_dir_path / model_file_name
