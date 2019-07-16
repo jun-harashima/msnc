@@ -29,14 +29,14 @@ class RecurrentEncoder(GenericEncoder):
         """RNN encoder
 
         Arguments:
-            xdim {int} -- input feature dimension
-            edim {int} -- embedding dimension
-            hdim {int} -- hidden vector dimension
-            lnum {int} -- number of stacked RNN layers
+            xdim {int} -- Size of a vocabulay
+            edim {int} -- Dimension of an embedding layer
+            hdim {int} -- Dimension of a hidden layer
+            lnum {int} -- Number of stacked RNN layers
 
         Keyword Arguments:
-            use_bidirectional {bool} -- if True, it uses bidirectional RNN (default: {True})  # NOQA
-            use_lstm {bool} -- if True, it uses LSTM (default: {True})
+            use_bidirectional {bool} -- Use bidirectional RNN (default: {True})
+            use_lstm {bool} -- If True, use LSTM, else GRU (default: {True})
             dropout {float} -- dropout ratio (default: {0.2})
         """
         super(RecurrentEncoder, self).__init__()
