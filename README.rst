@@ -26,7 +26,16 @@ Run this command in your terminal:
 Pre-processing
 --------------
 
-TBD
+Prepare ``training_dataset`` and ``development_dataset`` as follows:
+
+.. code-block:: python
+
+    from msnc.dataset import Dataset
+
+    training_dataset = Dataset(examples)
+    development_dataset = Dataset(examples, training_dataset.x_to_index)
+
+Note that ``examples`` is an array which consists of ``{'index': index, 'Xs': Xs, 'y': y}``, where ``index`` (int), ``Xs`` (array of str), and ``y`` (int) represent an index, inputs, and output of an example, respectively.
 
 Training
 --------
@@ -34,6 +43,8 @@ Training
 Construct a ``Model`` object and train it as follows:
 
 .. code-block:: python
+
+    from msnc.model import Model
 
     xdims = [len(x_to_index) for x_to_index in training_dataset.x_to_index]
 
@@ -63,10 +74,10 @@ For the Encoders, you can also use the following parameters:
 - **use_bidirectional** - Use bidirectional RNN (default: ``True``)
 - **use_lstm** - If ``True``, use LSTM, else GRU (Default: ``True``)
 
-Pre-processing
+Test
 --------------
 
-Test
+TBD
 
 Credits
 -------
