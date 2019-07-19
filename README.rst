@@ -35,7 +35,7 @@ Prepare ``training_dataset`` and ``development_dataset`` as follows:
     training_dataset = Dataset(examples)
     development_dataset = Dataset(examples, training_dataset.x_to_index)
 
-Note that ``examples`` is an array which consists of ``{'index': index, 'Xs': Xs, 'y': y}``, where ``index`` (int), ``Xs`` (array of str), and ``y`` (int) represent an index, inputs, and output of an example, respectively.
+Note that ``examples`` is an array which consists of ``{'index': index, 'Xs': Xs, 'y': y}``, where ``index`` (int), ``Xs`` (array of array of str), and ``y`` (int) represent an index, inputs, and output of an example, respectively.
 
 Training
 --------
