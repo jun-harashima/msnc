@@ -12,10 +12,10 @@ msnc
 msnc is an acronym of multi-source neural classification.
 
 Quick Start
------------
+===========
 
 Installation
-^^^^^^^^^^^^
+------------
 
 Run this command in your terminal:
 
@@ -26,16 +26,16 @@ Run this command in your terminal:
 Pre-processing
 --------------
 
-Prepare ``training_dataset`` and ``development_dataset`` as follows:
+See also ``scripts/sample.py``. First, prepare ``training_dataset`` and ``development_dataset`` as follows:
 
 .. code-block:: python
 
     from msnc.dataset import Dataset
 
-    training_dataset = Dataset(examples)
-    development_dataset = Dataset(examples, training_dataset.x_to_index)
+    training_dataset = Dataset(training_examples)
+    development_dataset = Dataset(development_examples, training_dataset.x_to_index)
 
-Note that ``examples`` is an array which consists of ``{'index': index, 'Xs': Xs, 'y': y}``, where ``index`` (int), ``Xs`` (array of array of str), and ``y`` (int) represent an index, inputs, and output of an example, respectively.
+Note that ``{training, development}_examples`` are arrays which consist of ``{'index': index, 'Xs': Xs, 'y': y}``, where ``index`` (int), ``Xs`` (array of array of str), and ``y`` (int) represent an index, inputs, and output of an example, respectively.
 
 Training
 --------
@@ -53,34 +53,36 @@ Construct a ``Model`` object and train it as follows:
     # hdim: Dimension of a hidden layer
     # lnum: Number of stacked RNN layers
     encoder_params = [
-        {'xdim': xdims[0], 'edim': 100, 'hdim': 20, 'lnum': 2},
-        {'xdim': xdims[1], 'edim': 100, 'hdim': 20, 'lnum': 2},
+        {'xdim': xdims[0], 'edim': 10, 'hdim': 4, 'lnum': 1, 'use_bidirectional': True},
+        {'xdim': xdims[1], 'edim': 20, 'hdim': 2, 'lnum': 2, 'use_bidirectional': False},
     ]
+
+    first_indim = sum([param['hdim'] * (param['use_bidirectional'] + 1) for param in encoder_params])
+    first_outdim = 4
+    second_outdim = 2
 
     # indim: Dimension of an input layer
     # outdim: Dimension of an output layer
     linear_params = [
-        {'indim': 40, 'outdim': 20},
-        {'indim': 20, 'outdim': 20},
+        {'indim': first_indim, 'outdim': first_outdim},
+        {'indim': first_outdim, 'outdim': second_outdim},
     ]
 
     model = Model(encoder_params, linear_params)
     model.run_training(output_dir, training_dataset, development_dataset)
 
-The trained model is saved in the ``output_dir``.
-
-For the Encoders, you can also use the following parameters:
+The trained model is saved in the ``output_dir``. Note that you need the same number of parameters as the number of encoders (two in the above case). The following parameters for the encoders are optional.
 
 - **use_bidirectional** - Use bidirectional RNN (default: ``True``)
 - **use_lstm** - If ``True``, use LSTM, else GRU (Default: ``True``)
 
 Test
---------------
+----
 
 TBD
 
 Credits
--------
+=======
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
